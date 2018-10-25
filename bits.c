@@ -112,7 +112,7 @@ NOTES:
 int absVal(int x)
 {
     int y = x >> 31;
-    return (x^y) - y;
+    return (x ^ y) - y;
 }
 
 /*
@@ -126,9 +126,10 @@ int absVal(int x)
 int addOK(int x, int y)
 {
     // TODO
-    int xor = x^y;
-    int sign = (xor >> 31) & 1;
-    return !(sign ^ ((x>>31)&1));
+    int sign = ((x + y) >> 31) & 1;
+    int sign_x = (x >> 31) & 1;
+    int sign_y = (y >> 31) & 1;
+    return !((sign ^ sign_x) & (sign ^ sign_y));
 }
 
 /*
@@ -167,7 +168,12 @@ int allOddBits(int x)
  */
 int anyEvenBit(int x)
 {
-    return 42;
+    x = x & (x >> 16);
+    x = x & (x >> 8);
+    x = x & (x >> 4);
+    x = x & (x >> 2);
+    x = x & (x >> 1);
+    return x;
 }
 
 /*
