@@ -111,7 +111,8 @@ NOTES:
  */
 int absVal(int x)
 {
-    return 42;
+    int y = x >> 31;
+    return (x^y) - y;
 }
 
 /*
@@ -124,7 +125,10 @@ int absVal(int x)
  */
 int addOK(int x, int y)
 {
-    return 42;
+    // TODO
+    int xor = x^y;
+    int sign = (xor >> 31) & 1;
+    return !(sign ^ ((x>>31)&1));
 }
 
 /*
