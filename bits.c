@@ -111,8 +111,8 @@ NOTES:
  */
 int absVal(int x)
 {
-    int y = x >> 31;
-    return (x ^ y) - y;
+    int y = x >> 30 >> 1;
+    return (x ^ y) + (~y + 1);
 }
 
 /*
@@ -125,10 +125,9 @@ int absVal(int x)
  */
 int addOK(int x, int y)
 {
-    // TODO
-    int sign = ((x + y) >> 31) & 1;
-    int sign_x = (x >> 31) & 1;
-    int sign_y = (y >> 31) & 1;
+    int sign = ((x + y) >> 30 >> 1) & 1;
+    int sign_x = (x >> 30 >> 1) & 1;
+    int sign_y = (y >> 30 >> 1) & 1;
     return !((sign ^ sign_x) & (sign ^ sign_y));
 }
 
@@ -142,7 +141,11 @@ int addOK(int x, int y)
  */
 int allEvenBits(int x)
 {
-    return 42;
+    x = x & (x >> 16);
+    x = x & (x >> 8);
+    x = x & (x >> 4);
+    x = x & (x >> 2);
+    return x & 1;
 }
 
 /*
@@ -168,14 +171,12 @@ int allOddBits(int x)
  */
 int anyEvenBit(int x)
 {
-    x = x & (x >> 16);
-    x = x & (x >> 8);
-    x = x & (x >> 4);
-    x = x & (x >> 2);
-    x = x & (x >> 1);
-    return x;
+    x = x | (x >> 16);
+    x = x | (x >> 8);
+    x = x | (x >> 4);
+    x = x | (x >> 2);
+    return x & 1;
 }
-
 /*
  * anyOddBit - return 1 if any odd-numbered bit in word set to 1
  *   where bits are numbered from 0 (least significant) to 31 (most significant)
