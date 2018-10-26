@@ -252,9 +252,10 @@ int bitCount(int x)
  */
 int bitMask(int highbit, int lowbit)
 {
-    // TODO
-    // int lowbit_larger = ((highbit + ~lowbit + 1) >> 31) & 1;
-    return ((1 << highbit) - (1 << lowbit)) | (1 << highbit);
+    // FIXME
+    int lowbit_larger = ((highbit + ~lowbit + 1) >> 30 >> 1) & 1;
+    int result = ((1 << highbit) - (1 << lowbit)) | (1 << highbit);
+    return ((~lowbit_larger + 1) & 0) | ((lowbit_larger + (~1 + 1)) & result);
 }
 
 /*
@@ -267,8 +268,8 @@ int bitMask(int highbit, int lowbit)
  */
 int bitMatch(int x, int y)
 {
-    // TODO
-    return 42;
+    // FIXME
+    return x & y;
 }
 
 /*
@@ -322,8 +323,24 @@ int bitParity(int x)
  */
 int bitReverse(int x)
 {
-    // TODO
-    return 42;
+    // FIXME
+    /*
+        n = ((n & 0xffff0000) >> 16) | ((n & 0x0000ffff) << 16);
+        n = ((n & 0xff00ff00) >>  8) | ((n & 0x00ff00ff) <<  8);
+        n = ((n & 0xf0f0f0f0) >>  4) | ((n & 0x0f0f0f0f) <<  4);
+        n = ((n & 0xcccccccc) >>  2) | ((n & 0x33333333) <<  2);
+        n = ((n & 0xaaaaaaaa) >>  1) | ((n & 0x55555555) <<  1);
+    */
+    int FF00 = (0xFF << 8) | (0xFF << 24);                        // 0xFF00FF00
+    int F0F0 = 0xF0 | (0xF0 << 8) | (0xFF << 16) | (0xFF << 24);  // 0xF0F0F0F0
+    int CCCC = 0xCC | (0xCC << 8) | (0xCC << 16) | (0xCC << 24);  // 0xCCCCCCCC
+    int AAAA = 0xAA | (0xAA << 8) | (0xAA << 16) | (0xAA << 24);  // 0xAAAAAAAA
+    x = (x >> 16) | (x << 16);
+    x = ((x & FF00) >> 8) | ((x & ~FF00) << 8);
+    x = ((x & F0F0) >> 4) | ((x & ~F0F0) << 4);
+    x = ((x & CCCC) >> 2) | ((x & ~CCCC) << 2);
+    x = ((x & AAAA) >> 1) | ((x & ~AAAA) << 1);
+    return x;
 }
 
 /*
@@ -362,13 +379,9 @@ int byteSwap(int x, int n, int m)
  */
 int conditional(int x, int y, int z)
 {
-    x |= x >> 16;
-    x |= x >> 8;
-    x |= x >> 4;
-    x |= x >> 2;
-    x |= x >> 1;
-    x &= 1;
-    return ((~x + 1) & y) | ((x + (~1 + 1)) & z);
+    // 0 if x == 0, otherwise 1
+    x = !x;
+    return ((~x + 1) & z) | ((x + (~1 + 1)) & y);
 }
 
 /*
@@ -382,6 +395,7 @@ int conditional(int x, int y, int z)
  */
 int countLeadingZero(int x)
 {
+    // TODO
     return 42;
 }
 
@@ -394,7 +408,8 @@ int countLeadingZero(int x)
  */
 int copyLSB(int x)
 {
-    return 42;
+    x &= 1;
+    return ~x + 1;
 }
 
 /*
@@ -406,7 +421,8 @@ int copyLSB(int x)
  */
 int distinctNegation(int x)
 {
-    return 42;
+    // FIXME T_min case
+    return !!x;
 }
 
 /*
@@ -419,9 +435,11 @@ int distinctNegation(int x)
  */
 int dividePower2(int x, int n)
 {
-    // TODO
+    //(x<0 ? (x+(1<<n)-1) : x) >> n;
     int sign = (x >> 30 >> 1) & 1;
-    return (x >> n) | (sign << 30 << 1);
+    return (((~sign + 1) & (x + (1 << n) + (~1 + 1))) |
+            ((sign + (~1 + 1)) & x)) >>
+           n;
 }
 
 /*
@@ -432,7 +450,10 @@ int dividePower2(int x, int n)
  */
 int evenBits(void)
 {
-    return 42;
+    int x = 0x55;
+    x |= x << 16;
+    x |= x << 8;
+    return x;
 }
 
 /*
@@ -448,7 +469,10 @@ int evenBits(void)
  */
 int ezThreeFourths(int x)
 {
-    return 42;
+    // FIXME
+    // x * (4-1) / 4
+    // x - x/4
+    return ((x << 2) + ~1 + 1) >> 2;
 }
 
 /*
@@ -462,7 +486,9 @@ int ezThreeFourths(int x)
  */
 int fitsBits(int x, int n)
 {
-    return 42;
+    int sign = (x >> 30 >> 1) & 1;
+    x = ((~sign + 1) & ~x) | ((sign + ~1 + 1) & x);
+    return !(x >> (n - 1));
 }
 
 /*
