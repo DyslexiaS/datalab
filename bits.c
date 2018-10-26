@@ -224,7 +224,7 @@ int bang(int x)
  */
 int bitAnd(int x, int y)
 {
-    return 42;
+    return ~((~x) | (~y));
 }
 
 /*
@@ -236,6 +236,7 @@ int bitAnd(int x, int y)
  */
 int bitCount(int x)
 {
+    // TODO
     return 42;
 }
 
@@ -251,7 +252,9 @@ int bitCount(int x)
  */
 int bitMask(int highbit, int lowbit)
 {
-    return 42;
+    // TODO
+    // int lowbit_larger = ((highbit + ~lowbit + 1) >> 31) & 1;
+    return ((1 << highbit) - (1 << lowbit)) | (1 << highbit);
 }
 
 /*
@@ -264,6 +267,7 @@ int bitMask(int highbit, int lowbit)
  */
 int bitMatch(int x, int y)
 {
+    // TODO
     return 42;
 }
 
@@ -276,7 +280,7 @@ int bitMatch(int x, int y)
  */
 int bitNor(int x, int y)
 {
-    return 42;
+    return ~x & ~y;
 }
 
 /*
@@ -288,7 +292,7 @@ int bitNor(int x, int y)
  */
 int bitOr(int x, int y)
 {
-    return 42;
+    return ~(~x & ~y);
 }
 
 /*
@@ -300,7 +304,12 @@ int bitOr(int x, int y)
  */
 int bitParity(int x)
 {
-    return 42;
+    x ^= x >> 16;
+    x ^= x >> 8;
+    x ^= x >> 4;
+    x ^= x >> 2;
+    x ^= x >> 1;
+    return x & 1;
 }
 
 /*
@@ -313,6 +322,7 @@ int bitParity(int x)
  */
 int bitReverse(int x)
 {
+    // TODO
     return 42;
 }
 
@@ -325,7 +335,7 @@ int bitReverse(int x)
  */
 int bitXor(int x, int y)
 {
-    return 42;
+    return ~(x & y) & (x | y);
 }
 
 /*
@@ -339,6 +349,7 @@ int bitXor(int x, int y)
  */
 int byteSwap(int x, int n, int m)
 {
+    // TODO
     return 42;
 }
 
@@ -351,7 +362,13 @@ int byteSwap(int x, int n, int m)
  */
 int conditional(int x, int y, int z)
 {
-    return 42;
+    x |= x >> 16;
+    x |= x >> 8;
+    x |= x >> 4;
+    x |= x >> 2;
+    x |= x >> 1;
+    x &= 1;
+    return ((~x + 1) & y) | ((x + (~1 + 1)) & z);
 }
 
 /*
@@ -402,7 +419,9 @@ int distinctNegation(int x)
  */
 int dividePower2(int x, int n)
 {
-    return 42;
+    // TODO
+    int sign = (x >> 30 >> 1) & 1;
+    return (x >> n) | (sign << 30 << 1);
 }
 
 /*
