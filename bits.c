@@ -421,7 +421,7 @@ int copyLSB(int x)
  */
 int distinctNegation(int x)
 {
-    // FIXME T_min case
+    x &= ~(1U << 30 << 1);
     return !!x;
 }
 
@@ -501,6 +501,8 @@ int fitsBits(int x, int n)
  */
 int fitsShort(int x)
 {
+    // TODO
+
     return 42;
 }
 
@@ -690,7 +692,9 @@ unsigned floatUnsigned2Float(unsigned u)
  */
 int getByte(int x, int n)
 {
-    return 42;
+    // TODO
+    int mask = 0xFF;
+    return x & mask;
 }
 
 /*
@@ -703,6 +707,7 @@ int getByte(int x, int n)
  */
 int greatestBitPos(int x)
 {
+    // TODO
     return 42;
 }
 
@@ -734,7 +739,8 @@ int howManyBits(int x)
  */
 int implication(int x, int y)
 {
-    return 42;
+    // x -> y  =>  (!x) | y
+    return (!x) | y;
 }
 
 /*
@@ -746,6 +752,7 @@ int implication(int x, int y)
  */
 int intLog2(int x)
 {
+    // TODO
     return 42;
 }
 
@@ -761,7 +768,9 @@ int intLog2(int x)
  */
 int isAsciiDigit(int x)
 {
-    return 42;
+    // TODO
+    int sign = (x >> 30 >> 1) & 1;
+    return (((0x2F + ~x + 1) ^ (0x3A + ~x + 1)) >> 30 >> 1) & 1 & (!sign);
 }
 
 /*
@@ -773,7 +782,7 @@ int isAsciiDigit(int x)
  */
 int isEqual(int x, int y)
 {
-    return 42;
+    return !(x ^ y);
 }
 
 /*
@@ -785,7 +794,10 @@ int isEqual(int x, int y)
  */
 int isGreater(int x, int y)
 {
-    return 42;
+    // FIXME
+    int pass = (x + ~y + 1) ^ (~x + 1 + y);
+    int sign = ((x + ~y + 1) >> 30 >> 1) & 1;
+    return sign & pass;
 }
 
 /*
@@ -821,7 +833,7 @@ int isLessOrEqual(int x, int y)
  */
 int isNegative(int x)
 {
-    return 42;
+    return (x >> 30 >> 1) & 1;
 }
 
 /*
@@ -833,7 +845,7 @@ int isNegative(int x)
  */
 int isNonNegative(int x)
 {
-    return 42;
+    return !((x >> 30 >> 1) & 1);
 }
 
 /*
@@ -846,7 +858,7 @@ int isNonNegative(int x)
  */
 int isNonZero(int x)
 {
-    return 42;
+    return !!x;
 }
 
 /*
@@ -858,7 +870,7 @@ int isNonZero(int x)
  */
 int isNotEqual(int x, int y)
 {
-    return 42;
+    return !!(x ^ y);
 }
 
 /*
@@ -870,6 +882,7 @@ int isNotEqual(int x, int y)
  */
 int isPallindrome(int x)
 {
+    // TODO
     return 42;
 }
 
@@ -882,7 +895,7 @@ int isPallindrome(int x)
  */
 int isPositive(int x)
 {
-    return 42;
+    return !((x >> 30 >> 1) & 1) & !!x;
 }
 
 /*
@@ -895,6 +908,7 @@ int isPositive(int x)
  */
 int isPower2(int x)
 {
+    // TODO
     return 42;
 }
 
@@ -907,7 +921,8 @@ int isPower2(int x)
  */
 int isTmax(int x)
 {
-    return 42;
+    // 100...00 == x + 1
+    return !((1 << 30 << 1) ^ (x + 1));
 }
 
 /*
@@ -919,7 +934,7 @@ int isTmax(int x)
  */
 int isTmin(int x)
 {
-    return 42;
+    return !((1 << 30 << 1) ^ x);
 }
 
 /*
@@ -931,7 +946,7 @@ int isTmin(int x)
  */
 int isZero(int x)
 {
-    return 42;
+    return !x;
 }
 
 /*
@@ -1226,7 +1241,7 @@ int thirdBits(void)
  */
 int tmax(void)
 {
-    return 42;
+    return ~(1 << 31);
 }
 
 /*
@@ -1237,7 +1252,7 @@ int tmax(void)
  */
 int tmin(void)
 {
-    return 42;
+    return 1 << 30 << 1;
 }
 
 /*
