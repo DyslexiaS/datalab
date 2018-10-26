@@ -141,10 +141,10 @@ int addOK(int x, int y)
  */
 int allEvenBits(int x)
 {
-    x = x & (x >> 16);
-    x = x & (x >> 8);
-    x = x & (x >> 4);
-    x = x & (x >> 2);
+    x &= x >> 16;
+    x &= x >> 8;
+    x &= x >> 4;
+    x &= x >> 2;
     return x & 1;
 }
 
@@ -158,7 +158,11 @@ int allEvenBits(int x)
  */
 int allOddBits(int x)
 {
-    return 42;
+    x &= x >> 16;
+    x &= x >> 8;
+    x &= x >> 4;
+    x &= x >> 2;
+    return (x >> 1) & 1;
 }
 
 /*
@@ -171,10 +175,10 @@ int allOddBits(int x)
  */
 int anyEvenBit(int x)
 {
-    x = x | (x >> 16);
-    x = x | (x >> 8);
-    x = x | (x >> 4);
-    x = x | (x >> 2);
+    x |= x >> 16;
+    x |= x >> 8;
+    x |= x >> 4;
+    x |= x >> 2;
     return x & 1;
 }
 /*
@@ -187,7 +191,11 @@ int anyEvenBit(int x)
  */
 int anyOddBit(int x)
 {
-    return 42;
+    x |= x >> 16;
+    x |= x >> 8;
+    x |= x >> 4;
+    x |= x >> 2;
+    return (x >> 1) & 1;
 }
 
 /*
