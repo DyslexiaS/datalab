@@ -472,7 +472,7 @@ int ezThreeFourths(int x)
     // FIXME
     // x * (4-1) / 4
     // x - x/4
-    return ((x << 2) + ~1 + 1) >> 2;
+    return ((x << 2) + x) >> 2;
 }
 
 /*
@@ -1031,7 +1031,7 @@ int minimumOfTwo(int x, int y)
  */
 int minusOne(void)
 {
-    return 42;
+    return ~0;
 }
 
 /*
@@ -1059,7 +1059,7 @@ int multFiveEighths(int x)
  */
 int negate(int x)
 {
-    return 42;
+    return ~x + 1;
 }
 
 /*
@@ -1070,7 +1070,10 @@ int negate(int x)
  */
 int oddBits(void)
 {
-    return 42;
+    int x = 0xAA;
+    x |= x << 8;
+    x |= x << 16;
+    return x;
 }
 
 /*
@@ -1160,7 +1163,7 @@ int satMul2(int x)
  *   Examples: satMul3(0x10000000) = 0x30000000
  *             satMul3(0x30000000) = 0x7FFFFFFF (Saturate to TMax)
  *             satMul3(0x70000000) = 0x7FFFFFFF (Saturate to TMax)
- *              satMul3(0xD0000000) = 0x80000000 (Saturate to TMin)
+ *	       satMul3(0xD0000000) = 0x80000000 (Saturate to TMin)
  *             satMul3(0xA0000000) = 0x80000000 (Saturate to TMin)
  *   Legal ops: ! ~ & ^ | + << >>
  *   Max ops: 25
@@ -1168,7 +1171,8 @@ int satMul2(int x)
  */
 int satMul3(int x)
 {
-    return 42;
+    // FIXME
+    return (x << 1) + x;
 }
 
 /*
@@ -1181,7 +1185,8 @@ int satMul3(int x)
  */
 int sign(int x)
 {
-    return 42;
+    int sign = (x >> 31) & 1;
+    return ((!!x) & (!sign)) | (~sign + 1);
 }
 
 /*
@@ -1205,7 +1210,8 @@ int signMag2TwosComp(int x)
  */
 int specialBits(void)
 {
-    return 42;
+    // FIXME
+    return ~0 & (0x28 << 14);
 }
 
 /*
@@ -1218,7 +1224,11 @@ int specialBits(void)
  */
 int subtractionOK(int x, int y)
 {
-    return 42;
+    // FIXME y = T_min
+    int sign = ((x + ~y + 1) << 31) & 1;
+    int sign_x = (x << 31) & 1;
+    int sign_y = (y << 31) & 1;
+    return (!(sign ^ sign_x)) | (sign ^ sign_y);
 }
 
 /*
@@ -1230,7 +1240,10 @@ int subtractionOK(int x, int y)
  */
 int thirdBits(void)
 {
-    return 42;
+    // 0x49249249
+    int x = (0x2 << 8) | 0x49;
+    x = x | (x << 12) | (x << 24);
+    return x;
 }
 
 /*
@@ -1252,7 +1265,7 @@ int tmax(void)
  */
 int tmin(void)
 {
-    return 1 << 30 << 1;
+    return 1 << 31;
 }
 
 /*
@@ -1282,6 +1295,7 @@ int trueFiveEighths(int x)
  */
 int trueThreeFourths(int x)
 {
+    // TODO
     return 42;
 }
 
