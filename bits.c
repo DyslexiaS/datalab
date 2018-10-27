@@ -692,9 +692,7 @@ unsigned floatUnsigned2Float(unsigned u)
  */
 int getByte(int x, int n)
 {
-    // TODO
-    int mask = 0xFF;
-    return x & mask;
+    return 0xFF & (x >> (n << 3));
 }
 
 /*
@@ -959,7 +957,8 @@ int isZero(int x)
  */
 int leastBitPos(int x)
 {
-    return 42;
+    //  ((! iszero) -1)  & ((x-1) ^ x)
+    return ((!x) + (~0)) & ((x + (~0)) ^ x);
 }
 
 /*
@@ -985,7 +984,13 @@ int leftBitCount(int x)
  */
 int logicalNeg(int x)
 {
-    return 42;
+    x |= x >> 16;
+    x |= x >> 8;
+    x |= x >> 4;
+    x |= x >> 2;
+    x |= x >> 1;
+    x &= 1;
+    return x ^ 1;
 }
 
 /*
@@ -998,7 +1003,8 @@ int logicalNeg(int x)
  */
 int logicalShift(int x, int n)
 {
-    return 42;
+    int zero = !n;
+    return (x >> n) & ((~zero + 1) | ((1 << (32 - n)) - 1));
 }
 
 /*
