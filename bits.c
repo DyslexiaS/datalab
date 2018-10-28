@@ -258,7 +258,7 @@ int bitCount(int x)
 int bitMask(int highbit, int lowbit)
 {
     // FIXME
-    int lowbit_larger = ((highbit + ~lowbit + 1) >> 30 >> 1) & 1;
+    int lowbit_larger = ((highbit + ~lowbit + 1) >> 31) & 1;
     int result = ((1 << highbit) - (1 << lowbit)) | (1 << highbit);
     return ((~lowbit_larger + 1) & 0) | ((lowbit_larger + (~1 + 1)) & result);
 }
@@ -768,9 +768,8 @@ int intLog2(int x)
  */
 int isAsciiDigit(int x)
 {
-    // TODO
-    int sign = (x >> 30 >> 1) & 1;
-    return (((0x2F + ~x + 1) ^ (0x3A + ~x + 1)) >> 30 >> 1) & 1 & (!sign);
+    // return (x - 0x30) >=0  &&  (0x39 - x) >=0
+    return !((((x + ~0x2F) | (0x3A + ~x)) >> 31) & 1);
 }
 
 /*
@@ -895,7 +894,7 @@ int isPallindrome(int x)
  */
 int isPositive(int x)
 {
-    return !((x >> 30 >> 1) & 1) & !!x;
+    return !((x >> 31) & 1) & !!x;
 }
 
 /*
@@ -922,7 +921,7 @@ int isPower2(int x)
 int isTmax(int x)
 {
     // 100...00 == x + 1
-    return !((1 << 30 << 1) ^ (x + 1));
+    return !((1 << 31) ^ (x + 1));
 }
 
 /*
@@ -934,7 +933,7 @@ int isTmax(int x)
  */
 int isTmin(int x)
 {
-    return !((1 << 30 << 1) ^ x);
+    return !((1 << 31) ^ x);
 }
 
 /*
@@ -1134,11 +1133,10 @@ int replaceByte(int x, int n, int c)
  */
 int rotateLeft(int x, int n)
 {
-    int mask = ((1 << n) + ~0) << (32 + ~n + 1);
-    mask = mask & x;
-    int zero = !n;
-    mask = (mask >> (32 + ~n + 1)) & ((~zero + 1) | ((1 << n) + ~0));
-    return (x << n) | mask;
+    int shift_dis = 32 + ~n + 1;
+    int mask = (1 << n) + ~0;
+    int save = mask & (x >> shift_dis);
+    return (x << n) | save;
 }
 
 /*
@@ -1151,12 +1149,11 @@ int rotateLeft(int x, int n)
  */
 int rotateRight(int x, int n)
 {
-    int mask = (1 << n) + ~0;
     int shift_dis = 32 + ~n + 1;
-    mask = (mask & x) << shift_dis;
-    int zero = !n;
-    x = (x >> n) & ((~zero + 1) | ((1 << shift_dis) + ~0));
-    return x | mask;
+    int mask = (1 << n) + ~0;
+    int save = (mask & x) << shift_dis;
+    int clear = mask << shift_dis;
+    return ((x >> n) & ~clear) | save;
 }
 
 /*
@@ -1170,6 +1167,13 @@ int rotateRight(int x, int n)
  *   Rating: 4
  */
 int satAdd(int x, int y)
+{
+    int sum = x + y;
+    int overflow = ((sum ^ x) & (sum ^ y)) >> 31;  // -1 or 0
+    int is_xy_pos = sum >> 31;                     // -1 or 0
+    return (sum & ~overflow) | (overflow & ((1 << 31) ^ is_xy_pos));
+}
+int satAdd_(int x, int y)
 {
     int sum = x + y;
     int sign = (sum >> 31) & 1;
@@ -1193,6 +1197,13 @@ int satAdd(int x, int y)
  *   Rating: 3
  */
 int satMul2(int x)
+{
+    int mul2 = x << 1;
+    int is_x_pos = mul2 >> 31;        // -1 or 0
+    int overflow = (mul2 ^ x) >> 31;  // -1 or 0
+    return (mul2 & ~overflow) | (overflow & ((1 << 31) ^ is_x_pos));
+}
+int satMul2_(int x)
 {
     // FIXME (op > 20)
     int sum = x + x;
