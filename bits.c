@@ -111,7 +111,7 @@ NOTES:
  */
 int absVal(int x)
 {
-    int y = x >> 30 >> 1;
+    int y = x >> 31;
     return (x ^ y) + (~y + 1);
 }
 
@@ -125,10 +125,15 @@ int absVal(int x)
  */
 int addOK(int x, int y)
 {
-    int sign = ((x + y) >> 30 >> 1) & 1;
-    int sign_x = (x >> 30 >> 1) & 1;
-    int sign_y = (y >> 30 >> 1) & 1;
-    return !((sign ^ sign_x) & (sign ^ sign_y));
+    int sign = x + y;
+    return !((((sign ^ x) & (sign ^ y)) >> 31) & 1);
+}
+int addOK_9(int x, int y)
+{
+    int sign = (x + y) >> 31;
+    int sign_x = x >> 31;
+    int sign_y = y >> 31;
+    return !(((sign ^ sign_x) & (sign ^ sign_y)) & 1);
 }
 
 /*
@@ -268,8 +273,7 @@ int bitMask(int highbit, int lowbit)
  */
 int bitMatch(int x, int y)
 {
-    // FIXME
-    return x & y;
+    return ~(~x & y) & ~(x & ~y);
 }
 
 /*
@@ -381,7 +385,7 @@ int conditional(int x, int y, int z)
 {
     // 0 if x == 0, otherwise 1
     x = !x;
-    return ((~x + 1) & z) | ((x + (~1 + 1)) & y);
+    return ((~x + 1) & z) | ((x + ~0) & y);
 }
 
 /*
@@ -408,8 +412,8 @@ int countLeadingZero(int x)
  */
 int copyLSB(int x)
 {
-    x &= 1;
-    return ~x + 1;
+    // return ~(x & 1) + 1;
+    return (x << 31) >> 31;
 }
 
 /*
@@ -421,7 +425,7 @@ int copyLSB(int x)
  */
 int distinctNegation(int x)
 {
-    x &= ~(1U << 30 << 1);
+    x &= ~(1 << 31);
     return !!x;
 }
 
@@ -436,7 +440,7 @@ int distinctNegation(int x)
 int dividePower2(int x, int n)
 {
     //(x<0 ? (x+(1<<n)-1) : x) >> n;
-    int sign = (x >> 30 >> 1) & 1;
+    int sign = (x >> 31) & 1;
     return (((~sign + 1) & (x + (1 << n) + (~1 + 1))) |
             ((sign + (~1 + 1)) & x)) >>
            n;
@@ -470,9 +474,8 @@ int evenBits(void)
 int ezThreeFourths(int x)
 {
     // FIXME
-    // x * (4-1) / 4
-    // x - x/4
-    return ((x << 2) + x) >> 2;
+    int mul3 = (x << 1) + x;
+    return mul3 >> 2;
 }
 
 /*
@@ -501,9 +504,8 @@ int fitsBits(int x, int n)
  */
 int fitsShort(int x)
 {
-    // TODO
-
-    return 42;
+    x += 1 << 15;
+    return !(x >> 16);
 }
 
 /*
@@ -792,10 +794,8 @@ int isEqual(int x, int y)
  */
 int isGreater(int x, int y)
 {
-    // FIXME
-    int pass = (x + ~y + 1) ^ (~x + 1 + y);
-    int sign = ((x + ~y + 1) >> 30 >> 1) & 1;
-    return sign & pass;
+    // return (x >= 0 && y < 0) || ((signbit(x^y) == 0) && ((x - y) > 0));
+    return (((~x & y) | ~((x ^ y) | (x + ~y))) >> 31) & 1;
 }
 
 /*
@@ -807,7 +807,8 @@ int isGreater(int x, int y)
  */
 int isLess(int x, int y)
 {
-    return 42;
+    // isGreater(y ,x)
+    return (((x & ~y) | ~((x ^ y) | (~x + y))) >> 31) & 1;
 }
 
 /*
@@ -819,7 +820,8 @@ int isLess(int x, int y)
  */
 int isLessOrEqual(int x, int y)
 {
-    return 42;
+    // !isGreater(x ,y)
+    return !((((~x & y) | ~((x ^ y) | (x + ~y))) >> 31) & 1);
 }
 
 /*
@@ -831,7 +833,7 @@ int isLessOrEqual(int x, int y)
  */
 int isNegative(int x)
 {
-    return (x >> 30 >> 1) & 1;
+    return (x >> 31) & 1;
 }
 
 /*
@@ -843,7 +845,7 @@ int isNegative(int x)
  */
 int isNonNegative(int x)
 {
-    return !((x >> 30 >> 1) & 1);
+    return !(x >> 31);
 }
 
 /*
@@ -1003,8 +1005,9 @@ int logicalNeg(int x)
  */
 int logicalShift(int x, int n)
 {
+    // (x >> n) & ((~zero + 1) | ((1 << (32 - n)) - 1));
     int zero = !n;
-    return (x >> n) & ((~zero + 1) | ((1 << (32 - n)) - 1));
+    return (x >> n) & ((~zero + 1) | ((1 << (32 + ~n + 1)) + ~0));
 }
 
 /*
@@ -1015,7 +1018,10 @@ int logicalShift(int x, int n)
  */
 int maximumOfTwo(int x, int y)
 {
-    return 42;
+    // Use isGreater() and conditional()
+    // -1 ,x is greater ,othrwise 0
+    int is_x_greater = (((~x & y) | ~((x ^ y) | (x + ~y))) >> 31);
+    return (is_x_greater & x) | (~is_x_greater & y);
 }
 
 /*
@@ -1026,7 +1032,10 @@ int maximumOfTwo(int x, int y)
  */
 int minimumOfTwo(int x, int y)
 {
-    return 42;
+    // Use isLess() and conditional()
+    // -1 ,x is less ,othrwise 0
+    int is_x_less = (((x & ~y) | ~((x ^ y) | (~x + y))) >> 31);
+    return (is_x_less & x) | (~is_x_less & y);
 }
 
 /*
@@ -1092,7 +1101,13 @@ int oddBits(void)
  */
 int remainderPower2(int x, int n)
 {
-    return 42;
+    // FIXME
+    int sign = (x >> 31) & 1;
+    int mask = (1 << (n + 1)) + ~1 + 1;
+    int y = x >> 31;
+    x = (x ^ y) + (~y + 1);
+    int x_mask = x & mask;
+    return ((~sign + 1) & x_mask) | ((sign + (~1 + 1)) & (~x_mask + 1));
 }
 
 /*
@@ -1119,20 +1134,29 @@ int replaceByte(int x, int n, int c)
  */
 int rotateLeft(int x, int n)
 {
-    return 42;
+    int mask = ((1 << n) + ~0) << (32 + ~n + 1);
+    mask = mask & x;
+    int zero = !n;
+    mask = (mask >> (32 + ~n + 1)) & ((~zero + 1) | ((1 << n) + ~0));
+    return (x << n) | mask;
 }
 
 /*
  * rotateRight - Rotate x to the right by n
  *               Can assume that 0 <= n <= 31
- *   Examples: rotateRight(0x87654321, 4) = 0x76543218
+ *   Examples: rotateRight(0x87654321, 4) = 0x18765432
  *   Legal ops: ~ & ^ | + << >> !
  *   Max ops: 25
  *   Rating: 3
  */
 int rotateRight(int x, int n)
 {
-    return 42;
+    int mask = (1 << n) + ~0;
+    int shift_dis = 32 + ~n + 1;
+    mask = (mask & x) << shift_dis;
+    int zero = !n;
+    x = (x >> n) & ((~zero + 1) | ((1 << shift_dis) + ~0));
+    return x | mask;
 }
 
 /*
@@ -1147,7 +1171,16 @@ int rotateRight(int x, int n)
  */
 int satAdd(int x, int y)
 {
-    return 42;
+    int sum = x + y;
+    int sign = (sum >> 31) & 1;
+    int sign_x = (x >> 31) & 1;
+    int sign_y = (y >> 31) & 1;
+    int overflow = (sign ^ sign_x) & (sign ^ sign_y);
+    int pos = !(sign_x | sign_y);
+    int if_ret_pos = overflow & pos;
+    int over_ret_val =
+        ((~if_ret_pos + 1) & ~(1 << 31)) | ((if_ret_pos + ~0) & (1 << 31));
+    return ((~overflow + 1) & (over_ret_val)) | ((overflow + ~0) & sum);
 }
 
 /*
@@ -1161,7 +1194,16 @@ int satAdd(int x, int y)
  */
 int satMul2(int x)
 {
-    return 42;
+    // FIXME (op > 20)
+    int sum = x + x;
+    int sign_s = (sum >> 31) & 1;
+    int sign_x = (x >> 31) & 1;
+    int overflow = sign_s ^ sign_x;
+    int pos = !sign_x;
+    int if_ret_pos = overflow & pos;
+    int over_ret_val =
+        ((~if_ret_pos + 1) & ~(1 << 31)) | ((if_ret_pos + ~0) & (1 << 31));
+    return ((~overflow + 1) & (over_ret_val)) | ((overflow + ~0) & sum);
 }
 
 /*
@@ -1178,7 +1220,16 @@ int satMul2(int x)
 int satMul3(int x)
 {
     // FIXME
-    return (x << 1) + x;
+    int sum2 = x << 1;  // TODO : case of sum2 overflow
+    int sum3 = sum2 + x;
+    int sign_s = (sum3 >> 31) & 1;
+    int sign_x = (x >> 31) & 1;
+    int overflow = sign_s ^ sign_x;
+    int pos = !sign_x;
+    int if_ret_pos = overflow & pos;
+    int over_ret_val =
+        ((~if_ret_pos + 1) & ~(1 << 31)) | ((if_ret_pos + ~0) & (1 << 31));
+    return ((~overflow + 1) & (over_ret_val)) | ((overflow + ~0) & sum3);
 }
 
 /*
@@ -1191,8 +1242,7 @@ int satMul3(int x)
  */
 int sign(int x)
 {
-    int sign = (x >> 31) & 1;
-    return ((!!x) & (!sign)) | (~sign + 1);
+    return (!!x) | (x >> 31);
 }
 
 /*
@@ -1205,7 +1255,9 @@ int sign(int x)
  */
 int signMag2TwosComp(int x)
 {
-    return 42;
+    int sign = (x >> 31) & 1;
+    x = ~(x & ~(1 << 31)) + 1;
+    return ((~sign + 1) | (~x + 1)) & ((sign + ~0) | x);
 }
 
 /*
@@ -1216,8 +1268,7 @@ int signMag2TwosComp(int x)
  */
 int specialBits(void)
 {
-    // FIXME
-    return ~0 & (0x28 << 14);
+    return ~(0xd7 << 14);
 }
 
 /*
@@ -1301,8 +1352,16 @@ int trueFiveEighths(int x)
  */
 int trueThreeFourths(int x)
 {
-    // TODO
-    return 42;
+    // FIXME
+    //  (x/4)*3 + (sign)(rem*3)/4
+    int sign = (x >> 31) & 1;
+    int rem = x & 0x3;
+    x = x >> 2;
+    x = (x << 1) + x;
+    rem = (rem << 1) + rem;
+    rem = rem >> 2;
+    // x = (((x & 1) & sign) + (x >> 2));
+    return (x / 4) * 3 + (-sign) * (rem * 3) / 4;
 }
 
 /*
@@ -1329,5 +1388,5 @@ int twosComp2SignMag(int x)
  */
 int upperBits(int n)
 {
-    return 42;
+    return (!!n << 31) >> (n + ~0);
 }
