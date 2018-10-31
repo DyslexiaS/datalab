@@ -1,3 +1,4 @@
+#include <stdio.h>
 /*
  * Modified CS:APP Data Lab
  *
@@ -257,10 +258,14 @@ int bitCount(int x)
  */
 int bitMask(int highbit, int lowbit)
 {
+    int high_mask = (1 << highbit << 1) + ~0;
+    int low_mask = high_mask << lowbit;
+    return high_mask & low_mask;
+}
+int bitMask_(int highbit, int lowbit)
+{
     // FIXME
-    int lowbit_larger = ((highbit + ~lowbit + 1) >> 31) & 1;
-    int result = ((1 << highbit) - (1 << lowbit)) | (1 << highbit);
-    return ((~lowbit_larger + 1) & 0) | ((lowbit_larger + (~1 + 1)) & result);
+    return ~(~0 << (highbit - lowbit + 1)) << lowbit;
 }
 
 /*
@@ -907,8 +912,8 @@ int isPositive(int x)
  */
 int isPower2(int x)
 {
-    // TODO
-    return 42;
+    // return x & x-1 ==0 & x != 0 & x > 0
+    return !((x & (x + ~0)) | !x | (x >> 31));
 }
 
 /*
@@ -958,6 +963,12 @@ int isZero(int x)
  */
 int leastBitPos(int x)
 {
+    //  only least bit will be different
+    return x ^ ((x + (~0)) & x);
+}
+
+int leastBitPos_(int x)
+{
     //  ((! iszero) -1)  & ((x-1) ^ x)
     return ((!x) + (~0)) & ((x + (~0)) ^ x);
 }
@@ -1002,7 +1013,13 @@ int logicalNeg(int x)
  *   Max ops: 20
  *   Rating: 3
  */
+
 int logicalShift(int x, int n)
+{
+    int mask = ~(1 << 31 >> n << 1);
+    return (x >> n) & mask;
+}
+int logicalShift_(int x, int n)
 {
     // (x >> n) & ((~zero + 1) | ((1 << (32 - n)) - 1));
     int zero = !n;
@@ -1101,12 +1118,7 @@ int oddBits(void)
 int remainderPower2(int x, int n)
 {
     // FIXME
-    int sign = (x >> 31) & 1;
-    int mask = (1 << (n + 1)) + ~1 + 1;
-    int y = x >> 31;
-    x = (x ^ y) + (~y + 1);
-    int x_mask = x & mask;
-    return ((~sign + 1) & x_mask) | ((sign + (~1 + 1)) & (~x_mask + 1));
+    return 42;
 }
 
 /*
@@ -1120,7 +1132,11 @@ int remainderPower2(int x, int n)
  */
 int replaceByte(int x, int n, int c)
 {
-    return 42;
+    int shift_dis = n << 3;
+    int clear_mask = ~(0xFF << shift_dis);
+    int clear_x = x & clear_mask;
+    int replace = c << shift_dis;
+    return clear_x | replace;
 }
 
 /*
@@ -1173,19 +1189,6 @@ int satAdd(int x, int y)
     int is_xy_pos = sum >> 31;                     // -1 or 0
     return (sum & ~overflow) | (overflow & ((1 << 31) ^ is_xy_pos));
 }
-int satAdd_(int x, int y)
-{
-    int sum = x + y;
-    int sign = (sum >> 31) & 1;
-    int sign_x = (x >> 31) & 1;
-    int sign_y = (y >> 31) & 1;
-    int overflow = (sign ^ sign_x) & (sign ^ sign_y);
-    int pos = !(sign_x | sign_y);
-    int if_ret_pos = overflow & pos;
-    int over_ret_val =
-        ((~if_ret_pos + 1) & ~(1 << 31)) | ((if_ret_pos + ~0) & (1 << 31));
-    return ((~overflow + 1) & (over_ret_val)) | ((overflow + ~0) & sum);
-}
 
 /*
  * satMul2 - multiplies by 2, saturating to Tmin or Tmax if overflow
@@ -1203,19 +1206,6 @@ int satMul2(int x)
     int overflow = (mul2 ^ x) >> 31;  // -1 or 0
     return (mul2 & ~overflow) | (overflow & ((1 << 31) ^ is_x_pos));
 }
-int satMul2_(int x)
-{
-    // FIXME (op > 20)
-    int sum = x + x;
-    int sign_s = (sum >> 31) & 1;
-    int sign_x = (x >> 31) & 1;
-    int overflow = sign_s ^ sign_x;
-    int pos = !sign_x;
-    int if_ret_pos = overflow & pos;
-    int over_ret_val =
-        ((~if_ret_pos + 1) & ~(1 << 31)) | ((if_ret_pos + ~0) & (1 << 31));
-    return ((~overflow + 1) & (over_ret_val)) | ((overflow + ~0) & sum);
-}
 
 /*
  * satMul3 - multiplies by 3, saturating to Tmin or Tmax if overflow
@@ -1230,17 +1220,12 @@ int satMul2_(int x)
  */
 int satMul3(int x)
 {
-    // FIXME
-    int sum2 = x << 1;  // TODO : case of sum2 overflow
-    int sum3 = sum2 + x;
-    int sign_s = (sum3 >> 31) & 1;
-    int sign_x = (x >> 31) & 1;
-    int overflow = sign_s ^ sign_x;
-    int pos = !sign_x;
-    int if_ret_pos = overflow & pos;
-    int over_ret_val =
-        ((~if_ret_pos + 1) & ~(1 << 31)) | ((if_ret_pos + ~0) & (1 << 31));
-    return ((~overflow + 1) & (over_ret_val)) | ((overflow + ~0) & sum3);
+    int mul2 = x << 1;  // case of mul2 overflow
+    int mul3 = mul2 + x;
+    int overflow = ((mul2 ^ x) | (mul3 ^ x)) >> 31;
+    int tmax = ~(1 << 31);  // handle the max case
+    int sign_x = x >> 31;   // -1 or 0
+    return (overflow & (tmax ^ sign_x)) | (~overflow & mul3);
 }
 
 /*
@@ -1293,10 +1278,14 @@ int specialBits(void)
 int subtractionOK(int x, int y)
 {
     // FIXME y = T_min
-    int sign = ((x + ~y + 1) << 31) & 1;
-    int sign_x = (x << 31) & 1;
-    int sign_y = (y << 31) & 1;
-    return (!(sign ^ sign_x)) | (sign ^ sign_y);
+    int sub = x + ~y + 1;
+    int t_mim = 1 << 31;
+    int y_is_tmin = !(t_mim ^ y);
+    int x_eq_y = !(x ^ y);
+    // overflow : x < 0, y > 0, x-y >0 || x > 0, y < 0, x-y < 0
+    int overflow = (((x ^ y) & (sub ^ x)) >> 31);  // -1 or 0
+    // printf(" over = %x\n", overflow);
+    return (overflow + 1) & (((!x_eq_y) & y_is_tmin) + ~0);
 }
 
 /*
@@ -1386,7 +1375,9 @@ int trueThreeFourths(int x)
  */
 int twosComp2SignMag(int x)
 {
-    return 42;
+    int sign = x >> 31;
+    int x_twos_comp = ~x + 1;
+    return (~sign & x) | (sign & ((sign << 31) | x_twos_comp));
 }
 
 /*
