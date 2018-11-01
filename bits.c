@@ -332,7 +332,6 @@ int bitParity(int x)
  */
 int bitReverse(int x)
 {
-    // FIXME
     /*
         n = ((n & 0xffff0000) >> 16) | ((n & 0x0000ffff) << 16);
         n = ((n & 0xff00ff00) >>  8) | ((n & 0x00ff00ff) <<  8);
@@ -340,15 +339,16 @@ int bitReverse(int x)
         n = ((n & 0xcccccccc) >>  2) | ((n & 0x33333333) <<  2);
         n = ((n & 0xaaaaaaaa) >>  1) | ((n & 0x55555555) <<  1);
     */
-    int FF00 = (0xFF << 8) | (0xFF << 24);                        // 0xFF00FF00
-    int F0F0 = 0xF0 | (0xF0 << 8) | (0xFF << 16) | (0xFF << 24);  // 0xF0F0F0F0
-    int CCCC = 0xCC | (0xCC << 8) | (0xCC << 16) | (0xCC << 24);  // 0xCCCCCCCC
-    int AAAA = 0xAA | (0xAA << 8) | (0xAA << 16) | (0xAA << 24);  // 0xAAAAAAAA
-    x = (x >> 16) | (x << 16);
-    x = ((x & FF00) >> 8) | ((x & ~FF00) << 8);
-    x = ((x & F0F0) >> 4) | ((x & ~F0F0) << 4);
-    x = ((x & CCCC) >> 2) | ((x & ~CCCC) << 2);
-    x = ((x & AAAA) >> 1) | ((x & ~AAAA) << 1);
+    int hex0000FFFF = ~(~0 << 16);
+    int hex00FF00FF = hex0000FFFF ^ (hex0000FFFF << 8);
+    int hex0F0F0F0F = hex00FF00FF ^ (hex00FF00FF << 4);
+    int hex33333333 = hex0F0F0F0F ^ (hex0F0F0F0F << 2);
+    int hex55555555 = hex33333333 ^ (hex33333333 << 1);
+    x = ((x >> 16) & hex0000FFFF) | (x & hex0000FFFF) << 16;
+    x = ((x >> 8) & hex00FF00FF) | (x & hex00FF00FF) << 8;
+    x = ((x >> 4) & hex0F0F0F0F) | (x & hex0F0F0F0F) << 4;
+    x = ((x >> 2) & hex33333333) | (x & hex33333333) << 2;
+    x = ((x >> 1) & hex55555555) | (x & hex55555555) << 1;
     return x;
 }
 
@@ -375,8 +375,12 @@ int bitXor(int x, int y)
  */
 int byteSwap(int x, int n, int m)
 {
-    // TODO
-    return 42;
+    int n_dis = n << 3;
+    int m_dis = m << 3;
+    int n_save = (x >> n_dis) & 0xFF;
+    int m_save = (x >> m_dis) & 0xFF;
+    x = x ^ (n_save << n_dis) ^ (m_save << m_dis);  // clear m,n byte
+    return x | (n_save << m_dis) | (m_save << n_dis);
 }
 
 /*
@@ -478,9 +482,10 @@ int evenBits(void)
  */
 int ezThreeFourths(int x)
 {
-    // FIXME
+    // if negative should +1, so we result+3 /4
     int mul3 = (x << 1) + x;
-    return mul3 >> 2;
+    int is_neg = mul3 >> 31;
+    return (mul3 + (is_neg & 3)) >> 2;
 }
 
 /*
@@ -886,8 +891,18 @@ int isNotEqual(int x, int y)
  */
 int isPallindrome(int x)
 {
-    // TODO
-    return 42;
+    // if x == bitReverse()
+    int hex0000FFFF = ~(~0 << 16);
+    int hex00FF00FF = hex0000FFFF ^ (hex0000FFFF << 8);
+    int hex0F0F0F0F = hex00FF00FF ^ (hex00FF00FF << 4);
+    int hex33333333 = hex0F0F0F0F ^ (hex0F0F0F0F << 2);
+    int hex55555555 = hex33333333 ^ (hex33333333 << 1);
+    int r = ((x >> 16) & hex0000FFFF) | (x & hex0000FFFF) << 16;
+    r = ((r >> 8) & hex00FF00FF) | (r & hex00FF00FF) << 8;
+    r = ((r >> 4) & hex0F0F0F0F) | (r & hex0F0F0F0F) << 4;
+    r = ((r >> 2) & hex33333333) | (r & hex33333333) << 2;
+    r = ((r >> 1) & hex55555555) | (r & hex55555555) << 1;
+    return !(x ^ r);
 }
 
 /*
