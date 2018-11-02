@@ -598,7 +598,7 @@ unsigned floatInt2Float(int x)
  */
 int floatIsEqual(unsigned uf, unsigned ug)
 {
-    return 42;
+    return !(uf ^ ug);
 }
 
 /*
@@ -1377,15 +1377,10 @@ int specialBits(void)
  */
 int subtractionOK(int x, int y)
 {
-    // FIXME y = T_min
     int sub = x + ~y + 1;
-    int t_mim = 1 << 31;
-    int y_is_tmin = !(t_mim ^ y);
-    int x_eq_y = !(x ^ y);
     // overflow : x < 0, y > 0, x-y >0 || x > 0, y < 0, x-y < 0
     int overflow = (((x ^ y) & (sub ^ x)) >> 31);  // -1 or 0
-    // printf(" over = %x\n", overflow);
-    return (overflow + 1) & (((!x_eq_y) & y_is_tmin) + ~0);
+    return !overflow;
 }
 
 /*
@@ -1437,6 +1432,14 @@ int tmin(void)
  */
 int trueFiveEighths(int x)
 {
+    // div 8 first, then mul 5
+    int sign = x >> 31;
+    int rem = x & 0x7;
+    int rem_mul5 = rem + (rem << 2);
+    rem_mul5 = (rem_mul5 + (sign & 0x7)) >> 3;
+    int x_div8_mul5 = (x >> 3) + ((x >> 3) << 2);
+    return x_div8_mul5 + rem_mul5;
+
     return 42;
 }
 
@@ -1452,7 +1455,13 @@ int trueFiveEighths(int x)
  */
 int trueThreeFourths(int x)
 {
-    return 42;
+    // div 4 first, then mul 3
+    int sign = x >> 31;
+    int rem = x & 0x3;
+    int rem_mul3 = rem + (rem << 1);
+    rem_mul3 = (rem_mul3 + (sign & 0x3)) >> 2;
+    int x_div4_mul3 = (x >> 2) + ((x >> 2) << 1);
+    return x_div4_mul3 + rem_mul3;
 }
 
 /*
