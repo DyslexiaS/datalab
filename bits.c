@@ -408,8 +408,27 @@ int conditional(int x, int y, int z)
  */
 int countLeadingZero(int x)
 {
-    // TODO
-    return 42;
+    int count = 0;
+    // if high 16 bits are all 0, do low 16 bits
+    int leading_zero = !(x >> 16);
+    int num = leading_zero << 4;
+    count = num;
+    x = x << num;
+
+    // if high 8 bits are all 0, do low 8 bits
+    leading_zero = !(x >> 24);
+    num = leading_zero << 3;
+    count = count + num;
+    x = x << num;
+
+    // if high 4 bits are all 0, do low 4 bits
+    leading_zero = !(x >> 28);
+    num = leading_zero << 2;
+    count = count + num;
+    x = x << num;
+
+    count = count + !(x >> 28) + !(x >> 29) + !(x >> 30) + !(x >> 31);
+    return count;
 }
 
 /*
@@ -531,7 +550,8 @@ int fitsShort(int x)
  */
 unsigned floatAbsVal(unsigned uf)
 {
-    return 42;
+    unsigned float_abs = uf & 0x7FFFFFFF;
+    return float_abs > 0x7F800000 ? uf : float_abs;
 }
 
 /*
@@ -717,8 +737,26 @@ int getByte(int x, int n)
  */
 int greatestBitPos(int x)
 {
-    // TODO
-    return 42;
+    // use countLeadingZero() to get how many leading bits are zero
+    int count = 0;
+    int leading_zero = !(x >> 16);
+    int num = leading_zero << 4;
+    count = num;
+    x = x << num;
+
+    leading_zero = !(x >> 24);
+    num = leading_zero << 3;
+    count = count + num;
+    x = x << num;
+
+    leading_zero = !(x >> 28);
+    num = leading_zero << 2;
+    count = count + num;
+    x = x << num;
+
+    count = count + !(x >> 28) + !(x >> 29) + !(x >> 30) + !(x >> 31);
+
+    return !!x << (31 + ~count + 1);
 }
 
 /* howManyBits - return the minimum number of bits required to represent x in
@@ -762,8 +800,28 @@ int implication(int x, int y)
  */
 int intLog2(int x)
 {
-    // TODO
-    return 42;
+    // use 31 - countLeadingZero()
+    int count = 0;
+    // if high 16 bits are all 0, do low 16 bits
+    int leading_zero = !(x >> 16);
+    int num = leading_zero << 4;
+    count = num;
+    x = x << num;
+
+    // if high 8 bits are all 0, do low 8 bits
+    leading_zero = !(x >> 24);
+    num = leading_zero << 3;
+    count = count + num;
+    x = x << num;
+
+    // if high 4 bits are all 0, do low 4 bits
+    leading_zero = !(x >> 28);
+    num = leading_zero << 2;
+    count = count + num;
+    x = x << num;
+
+    count = count + !(x >> 28) + !(x >> 29) + !(x >> 30) + !(x >> 31);
+    return 31 - count;
 }
 
 /*
@@ -979,13 +1037,13 @@ int isZero(int x)
 int leastBitPos(int x)
 {
     //  only least bit will be different
-    return x ^ ((x + (~0)) & x);
+    return x ^ ((x + ~0) & x);
 }
 
 int leastBitPos_(int x)
 {
     //  ((! iszero) -1)  & ((x-1) ^ x)
-    return ((!x) + (~0)) & ((x + (~0)) ^ x);
+    return ((!x) + ~0) & ((x + ~0) ^ x);
 }
 
 /*
@@ -998,7 +1056,25 @@ int leastBitPos_(int x)
  */
 int leftBitCount(int x)
 {
-    return 42;
+    int count = 0;
+    x = ~x;
+    int leading_zero = !(x >> 16);
+    int num = leading_zero << 4;
+    count = num;
+    x = x << num;
+
+    leading_zero = !(x >> 24);
+    num = leading_zero << 3;
+    count = count + num;
+    x = x << num;
+
+    leading_zero = !(x >> 28);
+    num = leading_zero << 2;
+    count = count + num;
+    x = x << num;
+
+    count = count + !(x >> 28) + !(x >> 29) + !(x >> 30) + !(x >> 31);
+    return count;
 }
 
 /*
@@ -1093,7 +1169,10 @@ int minusOne(void)
  */
 int multFiveEighths(int x)
 {
-    return 42;
+    // the same as ezThreeFourths()
+    int mul5 = x + (x << 2);
+    int is_neg = mul5 >> 31;
+    return (mul5 + (is_neg & 7)) >> 3;
 }
 
 /*
@@ -1132,8 +1211,14 @@ int oddBits(void)
  */
 int remainderPower2(int x, int n)
 {
-    // FIXME
-    return 42;
+    int is_neg = x >> 31;
+    int quotient = (x + (((1 << n) + ~0) & (is_neg & 1))) >> n;
+    int no_rem = quotient << n;
+    int t_min = 1 << 31;
+    int x_eq_tmin = !(x ^ t_min);
+    // printf("%d\n", no_rem);
+    // printf("%x\n", x - no_rem);
+    return (x_eq_tmin - 1) & (x + ~no_rem + 1);
 }
 
 /*
@@ -1367,16 +1452,7 @@ int trueFiveEighths(int x)
  */
 int trueThreeFourths(int x)
 {
-    // FIXME
-    //  (x/4)*3 + (sign)(rem*3)/4
-    int sign = (x >> 31) & 1;
-    int rem = x & 0x3;
-    x = x >> 2;
-    x = (x << 1) + x;
-    rem = (rem << 1) + rem;
-    rem = rem >> 2;
-    // x = (((x & 1) & sign) + (x >> 2));
-    return (x / 4) * 3 + (-sign) * (rem * 3) / 4;
+    return 42;
 }
 
 /*
